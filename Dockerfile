@@ -1,4 +1,5 @@
-FROM phusion/baseimage
+FROM phusion/baseimage:0.9.18
+MAINTAINER Dave Oxley <freepbx-docker@oxley.email>
 
 # Set environment variables
 ENV DEBIAN_FRONTEND noninteractive
@@ -6,13 +7,14 @@ ENV HOME="/root"
 ENV TERM=xterm
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
+ENV TZ=UTC
 ENV LC_ALL=en_US.UTF-8
 ENV ASTERISKUSER asterisk
 ENV ASTERISK_DB_PW Password
-ENV ASTERISKVER 13.1
-ENV FREEPBXVER 12.0.43
+ENV ASTERISKVER 13.7.2
+ENV FREEPBXVER 13.0.95
 
-EXPOSE 80
+EXPOSE 443
 
 CMD ["/sbin/my_init"]
 
@@ -20,24 +22,21 @@ CMD ["/sbin/my_init"]
 COPY start-apache2.sh /etc/service/apache2/run
 COPY start-mysqld.sh /etc/service/mysqld/run
 COPY start-asterisk.sh /etc/service/asterisk/run
-COPY start-amportal.sh /etc/my_init.d/10_amportal.sh
-COPY start-fail2ban.sh /etc/my_init.d/20_fail2ban.sh
+COPY start-fail2ban.sh /etc/my_init.d/fail2ban.sh
 
 RUN chmod +x /etc/service/apache2/run && \
     chmod +x /etc/service/mysqld/run && \
     chmod +x /etc/service/asterisk/run && \
-    chmod +x /etc/my_init.d/10_amportal.sh && \
-    chmod +x /etc/my_init.d/20_fail2ban.sh
+    chmod +x /etc/my_init.d/fail2ban.sh
 
 # Following steps on FreePBX wiki
-# http://wiki.freepbx.org/display/HTGS/Installing+FreePBX+12+on+Ubuntu+Server+14.04+LTS
+# http://wiki.freepbx.org/display/FOP/Installing+FreePBX+13+on+Ubuntu+Server+14.04.2+LTS
 
 # Install Required Dependencies
-RUN sed -i 's/archive.ubuntu.com/mirrors.digitalocean.com/' /etc/apt/sources.list && \
-    apt-get update && \
-    apt-get upgrade -y && \
+RUN apt-get update && \
     apt-get install -y \
         apache2 \
+        aptitude \
         automake \
         bison \
         build-essential \
@@ -78,8 +77,6 @@ RUN sed -i 's/archive.ubuntu.com/mirrors.digitalocean.com/' /etc/apt/sources.lis
         unixodbc-dev \
         uuid \
         uuid-dev && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
     mv /etc/fail2ban/filter.d/asterisk.conf /etc/fail2ban/filter.d/asterisk.conf.org && \
     mv /etc/fail2ban/jail.conf /etc/fail2ban/jail.conf.org
 
@@ -97,12 +94,12 @@ RUN pear uninstall db && \
 
 # Compile and install pjproject
 WORKDIR /usr/src
-RUN curl -sf -o pjproject.tar.bz2 -L http://www.pjsip.org/release/2.3/pjproject-2.3.tar.bz2 && \
+RUN curl -sf -o pjproject.tar.bz2 -L http://www.pjsip.org/release/2.4/pjproject-2.4.tar.bz2 && \
     mkdir pjproject && \
     tar -xf pjproject.tar.bz2 -C pjproject --strip-components=1 && \
     rm pjproject.tar.bz2 && \
     cd pjproject && \
-    ./configure --enable-shared --disable-sound --disable-resample --disable-video --disable-opencore-amr && \
+    CFLAGS='-DPJ_HAS_IPV6=1' ./configure --enable-shared --disable-sound --disable-resample --disable-video --disable-opencore-amr && \
     make dep && \
     make && \
     make install && \
@@ -123,7 +120,7 @@ RUN curl -sf -o jansson.tar.gz -L http://www.digip.org/jansson/releases/jansson-
 
 # Compile and Install Asterisk
 WORKDIR /usr/src
-RUN curl -sf -o asterisk.tar.gz -L http://downloads.asterisk.org/pub/telephony/certified-asterisk/certified-asterisk-$ASTERISKVER-current.tar.gz && \
+RUN curl -sf -o asterisk.tar.gz -L http://downloads.asterisk.org/pub/telephony/asterisk/asterisk-$ASTERISKVER.tar.gz && \
     mkdir asterisk && \
     tar -xzf /usr/src/asterisk.tar.gz -C /usr/src/asterisk --strip-components=1 && \
     rm asterisk.tar.gz && \
@@ -139,14 +136,27 @@ RUN curl -sf -o asterisk.tar.gz -L http://downloads.asterisk.org/pub/telephony/c
     ldconfig && \
     rm -r /usr/src/asterisk
 
-# Download extra sounds
+# Download core and extra sounds
 WORKDIR /var/lib/asterisk/sounds
-RUN curl -sf -o asterisk-extra-sounds-en-wav-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-extra-sounds-en-wav-current.tar.gz && \
-    tar -xzf asterisk-extra-sounds-en-wav-current.tar.gz && \
-    rm -f asterisk-extra-sounds-en-wav-current.tar.gz && \
-    curl -sf -o asterisk-extra-sounds-en-g722-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-extra-sounds-en-g722-current.tar.gz && \
-    tar -xzf asterisk-extra-sounds-en-g722-current.tar.gz && \
-    rm -f asterisk-extra-sounds-en-g722-current.tar.gz
+RUN curl -sf -o asterisk-core-sounds-en_GB-wav-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-core-sounds-en_GB-wav-current.tar.gz && \
+      tar -xzf asterisk-core-sounds-en_GB-wav-current.tar.gz && \
+      rm -f asterisk-core-sounds-en_GB-wav-current.tar.gz && \
+    curl -sf -o asterisk-extra-sounds-en_GB-wav-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-extra-sounds-en_GB-wav-current.tar.gz && \
+      tar -xzf asterisk-extra-sounds-en_GB-wav-current.tar.gz && \
+      rm -f asterisk-extra-sounds-en_GB-wav-current.tar.gz && \
+    curl -sf -o asterisk-core-sounds-en_GB-g722-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-core-sounds-en_GB-g722-current.tar.gz && \
+      tar -xzf asterisk-core-sounds-en_GB-g722-current.tar.gz && \
+      rm -f asterisk-core-sounds-en_GB-g722-current.tar.gz && \
+    curl -sf -o asterisk-extra-sounds-en_GB-g722-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-extra-sounds-en_GB-g722-current.tar.gz && \
+      tar -xzf asterisk-extra-sounds-en_GB-g722-current.tar.gz && \
+      rm -f asterisk-extra-sounds-en_GB-g722-current.tar.gz && \
+    curl -sf -o asterisk-core-sounds-en_GB-g729-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-core-sounds-en_GB-g729-current.tar.gz && \
+      tar -xzf asterisk-core-sounds-en_GB-g729-current.tar.gz && \
+      rm -f asterisk-core-sounds-en_GB-g729-current.tar.gz && \
+    curl -sf -o asterisk-extra-sounds-en_GB-g729-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-extra-sounds-en_GB-g729-current.tar.gz && \
+      tar -xzf asterisk-extra-sounds-en_GB-g729-current.tar.gz && \
+      rm -f asterisk-extra-sounds-en_GB-g729-current.tar.gz
+
 
 # Add Asterisk user
 RUN useradd -m $ASTERISKUSER && \
@@ -177,26 +187,22 @@ RUN /etc/init.d/mysql start && \
 
 # Download and install FreePBX
 WORKDIR /usr/src
-RUN curl -sf -o freepbx-$FREEPBXVER.tgz -L http://mirror.freepbx.org/freepbx-$FREEPBXVER.tgz && \
+RUN curl -sf -o freepbx-$FREEPBXVER.tgz -L http://mirror.freepbx.org/modules/packages/freepbx/freepbx-$FREEPBXVER.tgz && \
     tar xfz freepbx-$FREEPBXVER.tgz && \
-    rm freepbx-$FREEPBXVER.tgz && \
-    cd /usr/src/freepbx && \
+    rm freepbx-$FREEPBXVER.tgz
+
+COPY conf/asterisk.conf /etc/asterisk/asterisk.conf
+
+RUN cd /usr/src/freepbx && \
     /etc/init.d/mysql start && \
     /etc/init.d/apache2 start && \
     /usr/sbin/asterisk && \
-    ./install_amp --installdb --username=$ASTERISKUSER --password=$ASTERISK_DB_PW && \
-    amportal chown && \
-    amportal a ma upgrade framework && \
-    amportal a ma upgradeall && \
-    amportal chown && \
-    amportal a reload && \
-    amportal a ma refreshsignatures && \
-    amportal chown && \
+    sleep 5 && \
+    ./install -n && \
     mysql -u$ASTERISKUSER -p$ASTERISK_DB_PW asterisk -e "INSERT into logfile_logfiles \
         (name, debug, dtmf, error, fax, notice, verbose, warning, security) \
         VALUES ('fail2ban', 'off', 'off', 'on', 'off', 'on', 'off', 'on', 'on');" && \
-    amportal a r && \
-    ln -s /var/lib/asterisk/moh /var/lib/asterisk/mohmp3 && \
+    fwconsole reload && \
     rm -r /usr/src/freepbx
 
 #Make CDRs work
@@ -206,4 +212,13 @@ COPY conf/cdr/cdr_adaptive_odbc.conf /etc/asterisk/cdr_adaptive_odbc.conf
 RUN chown asterisk:asterisk /etc/asterisk/cdr_adaptive_odbc.conf && \
     chmod 775 /etc/asterisk/cdr_adaptive_odbc.conf
 
+# Configure SSL Apache
+COPY conf/apache/default-ssl.conf /etc/apache2/sites-available/
+COPY conf/apache/ports.conf /etc/apache2/
+
+RUN a2enmod ssl
+RUN a2ensite default-ssl
+
 WORKDIR /
+
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
