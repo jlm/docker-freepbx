@@ -157,6 +157,9 @@ RUN curl -sf -o asterisk-core-sounds-en_GB-wav-current.tar.gz -L http://download
       tar -xzf asterisk-extra-sounds-en_GB-g729-current.tar.gz && \
       rm -f asterisk-extra-sounds-en_GB-g729-current.tar.gz
 
+# Add additional codecs
+RUN curl -sf -o /usr/lib/asterisk/modules/codec_g729.so -L http://asterisk.hosting.lv/bin/codec_g729-ast130-gcc4-glibc-x86_64-core2-sse4.so && \
+    curl -sf -o /usr/lib/asterisk/modules/codec_g723.so -L http://asterisk.hosting.lv/bin/codec_g723-ast130-gcc4-glibc-x86_64-core2-sse4.so
 
 # Add Asterisk user
 RUN useradd -m $ASTERISKUSER && \
