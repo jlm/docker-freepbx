@@ -205,6 +205,8 @@ RUN cd /usr/src/freepbx && \
     mysql -u$ASTERISKUSER -p$ASTERISK_DB_PW asterisk -e "INSERT into logfile_logfiles \
         (name, debug, dtmf, error, fax, notice, verbose, warning, security) \
         VALUES ('fail2ban', 'off', 'off', 'on', 'off', 'on', 'off', 'on', 'on');" && \
+    fwconsole moduleadmin installall standard && \
+    fwconsole chown && \
     fwconsole reload && \
     rm -r /usr/src/freepbx
 
