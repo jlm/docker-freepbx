@@ -11,8 +11,9 @@ ENV TZ=UTC
 ENV LC_ALL=en_US.UTF-8
 ENV ASTERISKUSER asterisk
 ENV ASTERISK_DB_PW Password
-ENV ASTERISKVER 13.7.2
-ENV FREEPBXVER 13.0.98
+ENV ASTERISKVER 13.8.0
+ENV AMI_PASSWORD 0e930b89963877f1f5a69539ec5ddda2
+ENV FREEPBXVER 13.0.101
 
 EXPOSE 443
 
@@ -77,6 +78,7 @@ RUN apt-get update && \
         unixodbc-dev \
         uuid \
         uuid-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
     mv /etc/fail2ban/filter.d/asterisk.conf /etc/fail2ban/filter.d/asterisk.conf.org && \
     mv /etc/fail2ban/jail.conf /etc/fail2ban/jail.conf.org
 
@@ -202,12 +204,19 @@ RUN cd /usr/src/freepbx && \
     /usr/sbin/asterisk && \
     sleep 5 && \
     ./install -n && \
+    sed -i "s/^secret =.*/secret = $AMI_PASSWORD/" /etc/asterisk/manager.conf && \
+    mysql -u$ASTERISKUSER -p$ASTERISK_DB_PW asterisk -e "update freepbx_settings \
+        set value='$AMI_PASSWORD' where keyword='AMPMGRPASS';" && \
+    killall asterisk && \
+    /usr/sbin/asterisk && \
+    sleep 5 && \
     mysql -u$ASTERISKUSER -p$ASTERISK_DB_PW asterisk -e "INSERT into logfile_logfiles \
         (name, debug, dtmf, error, fax, notice, verbose, warning, security) \
         VALUES ('fail2ban', 'off', 'off', 'on', 'off', 'on', 'off', 'on', 'on');" && \
     fwconsole moduleadmin installall standard && \
-    fwconsole chown && \
+    fwconsole moduleadmin delete digiumaddoninstaller firewall && \
     fwconsole reload && \
+    fwconsole chown && \
     rm -r /usr/src/freepbx
 
 #Make CDRs work
@@ -225,5 +234,3 @@ RUN a2enmod ssl
 RUN a2ensite default-ssl
 
 WORKDIR /
-
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
