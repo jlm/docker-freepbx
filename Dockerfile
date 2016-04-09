@@ -71,6 +71,7 @@ RUN apt-get update && \
         php5-mysql \
         php-pear \
         pkg-config \
+        postfix \
         sox\
         sqlite3 \
         autoconf \
