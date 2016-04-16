@@ -11,7 +11,7 @@ ENV TZ=UTC
 ENV LC_ALL=en_US.UTF-8
 ENV ASTERISKUSER asterisk
 ENV ASTERISK_DB_PW Password
-ENV ASTERISKVER 13.8.0
+ENV ASTERISKVER 13.8.1
 ENV AMI_PASSWORD 0e930b89963877f1f5a69539ec5ddda2
 ENV FREEPBXVER 13.0.105
 
@@ -23,11 +23,13 @@ CMD ["/sbin/my_init"]
 COPY start-apache2.sh /etc/service/apache2/run
 COPY start-mysqld.sh /etc/service/mysqld/run
 COPY start-asterisk.sh /etc/service/asterisk/run
+COPY start-postfix.sh /etc/service/postfix/run
 COPY start-fail2ban.sh /etc/my_init.d/fail2ban.sh
 
 RUN chmod +x /etc/service/apache2/run && \
     chmod +x /etc/service/mysqld/run && \
     chmod +x /etc/service/asterisk/run && \
+    chmod +x /etc/service/postfix/run && \
     chmod +x /etc/my_init.d/fail2ban.sh
 
 # Following steps on FreePBX wiki
