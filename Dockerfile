@@ -11,9 +11,10 @@ ENV TZ=UTC
 ENV LC_ALL=en_US.UTF-8
 ENV ASTERISKUSER asterisk
 ENV ASTERISK_DB_PW Password
-ENV ASTERISKVER 13.8.1
+ENV ASTERISK_VER 13.8.2
+ENV ASTERISK_SND_VER 1.5
 ENV AMI_PASSWORD 0e930b89963877f1f5a69539ec5ddda2
-ENV FREEPBXVER 13.0.105
+ENV FREEPBXVER 13.0.106
 
 EXPOSE 443
 
@@ -125,7 +126,7 @@ RUN curl -sf -o jansson.tar.gz -L http://www.digip.org/jansson/releases/jansson-
 
 # Compile and Install Asterisk
 WORKDIR /usr/src
-RUN curl -sf -o asterisk.tar.gz -L http://downloads.asterisk.org/pub/telephony/asterisk/asterisk-$ASTERISKVER.tar.gz && \
+RUN curl -sf -o asterisk.tar.gz -L http://downloads.asterisk.org/pub/telephony/asterisk/releases/asterisk-$ASTERISK_VER.tar.gz && \
     mkdir asterisk && \
     tar -xzf /usr/src/asterisk.tar.gz -C /usr/src/asterisk --strip-components=1 && \
     rm asterisk.tar.gz && \
@@ -143,24 +144,24 @@ RUN curl -sf -o asterisk.tar.gz -L http://downloads.asterisk.org/pub/telephony/a
 
 # Download core and extra sounds
 WORKDIR /var/lib/asterisk/sounds
-RUN curl -sf -o asterisk-core-sounds-en_GB-wav-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-core-sounds-en_GB-wav-current.tar.gz && \
-      tar -xzf asterisk-core-sounds-en_GB-wav-current.tar.gz && \
-      rm -f asterisk-core-sounds-en_GB-wav-current.tar.gz && \
-    curl -sf -o asterisk-extra-sounds-en_GB-wav-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-extra-sounds-en_GB-wav-current.tar.gz && \
-      tar -xzf asterisk-extra-sounds-en_GB-wav-current.tar.gz && \
-      rm -f asterisk-extra-sounds-en_GB-wav-current.tar.gz && \
-    curl -sf -o asterisk-core-sounds-en_GB-g722-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-core-sounds-en_GB-g722-current.tar.gz && \
-      tar -xzf asterisk-core-sounds-en_GB-g722-current.tar.gz && \
-      rm -f asterisk-core-sounds-en_GB-g722-current.tar.gz && \
-    curl -sf -o asterisk-extra-sounds-en_GB-g722-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-extra-sounds-en_GB-g722-current.tar.gz && \
-      tar -xzf asterisk-extra-sounds-en_GB-g722-current.tar.gz && \
-      rm -f asterisk-extra-sounds-en_GB-g722-current.tar.gz && \
-    curl -sf -o asterisk-core-sounds-en_GB-g729-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-core-sounds-en_GB-g729-current.tar.gz && \
-      tar -xzf asterisk-core-sounds-en_GB-g729-current.tar.gz && \
-      rm -f asterisk-core-sounds-en_GB-g729-current.tar.gz && \
-    curl -sf -o asterisk-extra-sounds-en_GB-g729-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-extra-sounds-en_GB-g729-current.tar.gz && \
-      tar -xzf asterisk-extra-sounds-en_GB-g729-current.tar.gz && \
-      rm -f asterisk-extra-sounds-en_GB-g729-current.tar.gz
+RUN curl -sf -o asterisk-core-sounds-en_GB-wav.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/releases/asterisk-core-sounds-en_GB-wav-$ASTERISK_SND_VER.tar.gz && \
+      tar -xzf asterisk-core-sounds-en_GB-wav.tar.gz && \
+      rm -f asterisk-core-sounds-en_GB-wav.tar.gz && \
+    curl -sf -o asterisk-extra-sounds-en_GB-wav.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/releases/asterisk-extra-sounds-en_GB-wav-$ASTERISK_SND_VER.tar.gz && \
+      tar -xzf asterisk-extra-sounds-en_GB-wav.tar.gz && \
+      rm -f asterisk-extra-sounds-en_GB-wav.tar.gz && \
+    curl -sf -o asterisk-core-sounds-en_GB-g722.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/releases/asterisk-core-sounds-en_GB-g722-$ASTERISK_SND_VER.tar.gz && \
+      tar -xzf asterisk-core-sounds-en_GB-g722.tar.gz && \
+      rm -f asterisk-core-sounds-en_GB-g722.tar.gz && \
+    curl -sf -o asterisk-extra-sounds-en_GB-g722.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/releases/asterisk-extra-sounds-en_GB-g722-$ASTERISK_SND_VER.tar.gz && \
+      tar -xzf asterisk-extra-sounds-en_GB-g722.tar.gz && \
+      rm -f asterisk-extra-sounds-en_GB-g722.tar.gz && \
+    curl -sf -o asterisk-core-sounds-en_GB-g729.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/releases/asterisk-core-sounds-en_GB-g729-$ASTERISK_SND_VER.tar.gz && \
+      tar -xzf asterisk-core-sounds-en_GB-g729.tar.gz && \
+      rm -f asterisk-core-sounds-en_GB-g729.tar.gz && \
+    curl -sf -o asterisk-extra-sounds-en_GB-g729.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/releases/asterisk-extra-sounds-en_GB-g729-$ASTERISK_SND_VER.tar.gz && \
+      tar -xzf asterisk-extra-sounds-en_GB-g729.tar.gz && \
+      rm -f asterisk-extra-sounds-en_GB-g729.tar.gz
 
 # Add additional codecs
 RUN curl -sf -o /usr/lib/asterisk/modules/codec_g729.so -L http://asterisk.hosting.lv/bin/codec_g729-ast130-gcc4-glibc-x86_64-core2-sse4.so && \
