@@ -7,5 +7,7 @@ else
     rm -f /etc/postfix/main.cf
 fi
 ln -sf /conf/postfix/main.cf /etc/postfix/main.cf
+mkdir -p /var/spool/postfix/etc/
+cp /etc/resolv.conf /var/spool/postfix/etc/
 
 /usr/lib/postfix/master -c /etc/postfix/ -d
