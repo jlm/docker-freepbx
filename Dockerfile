@@ -56,6 +56,7 @@ RUN apt-get update && \
         libneon27-dev \
         libnewt-dev \
         libogg-dev \
+        libsasl2-modules \
         libspandsp-dev \
         libsrtp0-dev \
         libssl-dev \
