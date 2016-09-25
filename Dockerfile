@@ -14,7 +14,7 @@ ENV ASTERISK_DB_PW Password
 ENV ASTERISK_VER 13.11.2
 ENV ASTERISK_SND_VER 1.5
 ENV AMI_PASSWORD 0e930b89963877f1f5a69539ec5ddda2
-ENV FREEPBXVER 13.0.188
+ENV FREEPBXVER 13.0.188.8
 
 EXPOSE 443
 
@@ -235,7 +235,7 @@ RUN chown asterisk:asterisk /etc/asterisk/cdr_adaptive_odbc.conf && \
 COPY conf/apache/default-ssl.conf /etc/apache2/sites-available/
 COPY conf/apache/ports.conf /etc/apache2/
 
-RUN a2enmod ssl
+RUN a2enmod ssl rewrite
 RUN a2ensite default-ssl
 
 WORKDIR /
