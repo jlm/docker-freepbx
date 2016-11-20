@@ -33,6 +33,8 @@ RUN chmod +x /etc/service/apache2/run && \
     chmod +x /etc/service/postfix/run && \
     chmod +x /etc/my_init.d/fail2ban.sh
 
+RUN mkdir /conf
+
 # Following steps on FreePBX wiki
 # http://wiki.freepbx.org/display/FOP/Installing+FreePBX+13+on+Ubuntu+Server+14.04.2+LTS
 

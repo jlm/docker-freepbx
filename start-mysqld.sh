@@ -2,7 +2,7 @@
 
 if [[ ! -d /conf/mysql ]]; then
     mv /var/lib/mysql /conf/mysql
-    mv /etc/freepbx.conf /conf
+    mv /etc/freepbx.conf /conf/freepbx.conf
 else
     rm -rf /var/lib/mysql
     rm -f /etc/freepbx.conf
